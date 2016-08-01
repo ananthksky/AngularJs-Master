@@ -1,0 +1,193 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>CRUD Operation in AngularJS</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+
+    <style>
+        div {
+            width: 600px;
+            text-align: center;
+        }
+
+        ul {
+            list-style: none;
+            margin: 5px;
+            padding: 0;
+            display: inline-block;
+        }
+
+        li {
+            border: none;
+            background: #FFF;
+        }
+
+        input, select {
+            font: 13px Verdana;
+            width: 170px;
+            padding: 3px;
+        }
+
+        button {
+            margin: 5px;
+        }
+
+        table, th, td {
+            font: 13px Verdana;
+            border: solid 1px #CCC;
+            width: 600px;
+        }
+
+        th {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div ng-app="myApp"
+        ng-controller="myController"
+        ng-init="myList=[
+            { category:'Business' },
+            { category:'Computers' },
+            { category:'Programming' },
+            { category:'Science' }]">
+
+        <div ng-form="Ajaxform">
+            <!--BASIC FORM CONTROLS-->
+            <label>{{bookid}}</label>
+            <ul>
+                <li>
+                    <input name="bookname" type="text"
+                        ng-model="bookname" required
+                        placeholder="Enter the Book Name" /></li>
+                
+            </ul>
+            <ul>
+                <li>
+                    <select name="category" ng-model="category"
+                        ng-options="c.category as c.category for c in myList">
+                        <option value="">-- Select a Category --</option>
+                    </select>
+                </li>
+            </ul>
+            <ul>
+                <li>
+                    <input name="price" type="number"
+                        ng-model="price" placeholder="Enter the Price" /></li>
+            </ul>
+
+            <!--TWO BUTTON CONTROLS-->
+            <p>
+                <button id="save" ng-disabled="isDisabled" ng-click="save()">Save My Book</button>
+                <button id="update" ng-click="update()">Update My Book</button>
+            </p>
+
+            <hr />
+
+            <!-- A TABLE ELEMENT TO SHOW ALL THE ENTRIES. -->
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Book Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                </tr>
+                <tr ng-repeat="myBooks in arrBooks" ng-click="edit(myBooks)">
+                    <td>{{ myBooks.BookID }}</td>
+                    <td>{{ myBooks.BookName }}</td>
+                    <td>{{ myBooks.Category }}</td>
+                    <td>{{ myBooks.Price }}</td>
+
+                    <td>
+                        <button id="delete" ng-click="del(myBooks)">Delete</button></td>
+                </tr>
+            </table>
+
+            
+        </div>
+    </div>
+</body>
+<script>
+    var myApp = angular.module('myApp', []);
+
+    myApp.controller('myController',
+        function ($scope, $http) {
+
+            $scope.save = function () {
+                Perform_CRUD('SAVE', 0)
+                ClearInput();
+            };
+
+            $scope.edit = function (myBook) {
+                $scope.bookid = myBook.BookID;
+                $scope.bookname = myBook.BookName;
+                $scope.category = myBook.Category;
+                $scope.price = myBook.Price;
+
+                $scope.isDisabled = true;
+            };
+
+            $scope.update = function () {
+                Perform_CRUD('UPDATE', $scope.bookid);
+                $scope.isDisabled = false;
+
+                ClearInput();
+            };
+
+            $scope.del = function (myBook) {
+                Perform_CRUD('DELETE', myBook.BookID)
+            };
+
+            function Perform_CRUD(ops, id) {
+                var request = {
+                    method: 'post',
+                    url: '/api/CRUDAPI/Perform_CRUD/',
+                    data: {
+                        BookID: id,
+                        BookName: $scope.bookname,
+                        Category: $scope.category,
+                        Price: $scope.price,
+                        Operation: ops
+                    },
+                    dataType: 'json',
+                    contentType: "application/json"
+                };
+
+                // POST DATA WITH $http.
+                $http(request)
+                    .success(function (data) {
+                        JSON.stringify(data);
+                        debugger;
+                        var i = 0;      // JUST A COUNTER.
+                        $scope.arrBooks = new Array;
+
+                        // LOOP THROUGH EACH DATA.
+                        $.map(data, function () {
+                            var b = {
+                                BookID: data[i].BookID,
+                                BookName: data[i].BookName,
+                                Category: data[i].Category,
+                                Price: data[i].Price
+                            };
+
+                            $scope.arrBooks.push(b);    // ADD DATA TO THE ARRAY.
+                            i += 1;
+                        });
+                    })
+                    .error(function () {
+
+                    });
+            };
+
+            // CLEAR ALL INPUT FIELDS AFTER EVERY OPERATION.
+            function ClearInput() {
+                $scope.bookid = '';
+                $scope.bookname = '';
+                $scope.category = '';
+                $scope.price = '';
+            }
+        });
+</script>
+</html>
